@@ -759,6 +759,12 @@
                     <span class="links_name">Dashboard</span>
                 </a>
             </li>
+            <li>
+                <a href="#">
+                    <i class='bx bx-stats'></i>
+                    <span class="links_name">Data Access</span>
+                </a>
+            </li>
             <li class="log_out">
                 <a href="#">
                     <i class='bx bx-log-out'></i>
@@ -1287,7 +1293,7 @@
                             var password = document.getElementById('password').value;
 
                             if (username === 'umt' && password === 'umt') {
-                                window.location.href = '/database';
+                                window.location.href = '/access';
                             } else {
                                 alert('Invalid username or password');
                             }
