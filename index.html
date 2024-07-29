@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Weather Station - UMT Stesen Penyelidikan Alami Kenyir</title>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/uibuilder/vendor/socket.io/socket.io.js"></script>
+    <script src="/uibuilder/uibuilderfe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            color: #4f3680;
+        }
+
+        .wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+            margin: 50px auto;
+            max-width: 1200px;
+        }
+
+        .chart-container {
+            flex: 1;
+            max-width: 700px;
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+
+        .login-container {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-container img {
+            width: 60px;
+            height: 50px;
+            margin-right: 10px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .login-form input {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .login-form button {
+            padding: 10px;
+            background-color: #4f3680;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .login-form button:hover {
+            background-color: #260a3f;
+        }
+
+        .sidebar {
+            position: fixed;
+            height: 100%;
+            width: 240px;
+            background: #260a3f;
+            transition: all 0.5s ease;
+        }
+
+        .sidebar.active {
+            width: 60px;
+        }
+
+        .sidebar .logo-details {
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .logo-details img {
+            margin-right: 10px;
+        }
+
+        .sidebar .logo-details i {
+            font-size: 28px;
+            font-weight: 500;
+            color: #fff;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .sidebar .logo-details .logo_name {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .sidebar .logo-details .logo_subtitle {
+            display: block;
+            color: #fff;
+            font-size: 1em;
+            font-weight: normal;
+            margin-top: 5px;
+        }
+
+        .sidebar .logo-details .logo_name-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar .nav-links {
+            margin-top: 10px;
+        }
+
+        .sidebar .nav-links li {
+            position: relative;
+            list-style: none;
+            height: 50px;
+        }
+
+        .sidebar .nav-links li a {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: all 0.4s ease;
+        }
+
+        .sidebar .nav-links li a.active {
+            background: #4f3680;
+        }
+
+        .sidebar .nav-links li a:hover {
+            background: #4f3680
+        }
+
+        .sidebar .nav-links li i {
+            min-width: 60px;
+            text-align: center;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .sidebar .nav-links li a .links_name {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        .sidebar .nav-links .log_out {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .home-section {
+            position: relative;
+            background: #f5f5f5;
+            min-height: 100vh;
+            width: calc(100% - 240px);
+            left: 240px;
+            transition: all 0.5s ease;
+        }
+
+        .sidebar.active~.home-section {
+            width: calc(100% - 60px);
+            left: 60px;
+        }
+
+        .home-section nav {
+            display: flex;
+            justify-content: space-between;
+            height: 80px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            position: fixed;
+            width: calc(100% - 240px);
+            left: 240px;
+            z-index: 100;
+            padding: 0 20px;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+        }
+
+        .sidebar.active~.home-section nav {
+            left: 60px;
+            width: calc(100% - 60px);
+        }
+
+        .home-section nav .sidebar-button {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        nav .sidebar-button i {
+            font-size: 35px;
+            margin-right: 10px;
+        }
+
+        .home-section nav .search-box {
+            position: relative;
+            height: 50px;
+            max-width: 550px;
+            width: 100%;
+            margin: 0 20px;
+        }
+
+        nav .search-box input {
+            height: 100%;
+            width: 100%;
+            outline: none;
+            background: #F5F6FA;
+            border: 2px solid #EFEEF1;
+            border-radius: 6px;
+            font-size: 18px;
+            padding: 0 15px;
+        }
+
+        nav .search-box .bx-search {
+            position: absolute;
+            height: 40px;
+            width: 40px;
+            background: #260a3f;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 4px;
+            line-height: 40px;
+            text-align: center;
+            color: #fff;
+            font-size: 22px;
+            transition: all 0.4 ease;
+        }
+
+        .home-section nav .profile-details {
+            display: flex;
+            align-items: center;
+            background: #Fff;
+            border: 2px solid #fff;
+            border-radius: 6px;
+            height: 50px;
+            min-width: 10px;
+            padding: 0 15px 0 2px;
+        }
+
+        nav .profile-details img {
+            height: 40px;
+            width: 40px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        nav .profile-details .admin_name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+            margin: 0 10px;
+            white-space: nowrap;
+        }
+
+        nav .profile-details i {
+            font-size: 25px;
+            color: #333;
+        }
+
+        .home-section .home-content {
+            position: relative;
+            padding-top: 104px;
+        }
+
+        .home-content .overview-boxes {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 0 10px;
+            margin-bottom: 56px;
+        }
+
+        .overview-boxes .box {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            width: calc(100% / 3 - 15px);
+            background: #fff;
+            padding: 15px 14px;
+            border-radius: 12px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 26px;
+        }
+
+        .home-content .kotak_boxes {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 0 10px;
+            margin-bottom: 0px;
+        }
+
+        .kotak_boxes .kotak_surface {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            width: calc(100% / 3 - 15px);
+            background: #fff;
+            padding: 10px 10px;
+            border-radius: 12px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .kotak_boxes .buoy_surface {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: calc(100% / 1 - 15px);
+            background: #fff;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .buoy_surface .right-side {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        .buoy_surface .box-topic {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .kotak_boxes .water_surface {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            width: calc(100% / 2 - 15px);
+            background: #fff;
+            padding: 10px 10px;
+            border-radius: 12px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .overview-boxes .box-topic {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .home-content .box .number {
+            display: inline-block;
+            font-size: 20px;
+            margin-top: -6px;
+            font-weight: 500;
+        }
+
+        .home-content .box .indicator {
+            display: flex;
+            align-items: center;
+        }
+
+        .home-content .box .indicator i {
+            height: 20px;
+            width: 20px;
+            background: #8FDACB;
+            line-height: 20px;
+            text-align: center;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 20px;
+            margin-right: 5px;
+        }
+
+        .box .indicator i.down {
+            background: #e87d88;
+        }
+
+        .home-content .box .indicator .text {
+            font-size: 12px;
+        }
+
+        .home-content .box .cart {
+            display: inline-block;
+            font-size: 32px;
+            height: 50px;
+            width: 50px;
+            background: #cce5ff;
+            line-height: 50px;
+            text-align: center;
+            color: #66b0ff;
+            border-radius: 12px;
+            margin: -15px 0 0 6px;
+        }
+
+        .home-content .box .cart.two {
+            color: #2BD47D;
+            background: #C0F2D8;
+        }
+
+        .home-content .box .cart.three {
+            color: #ffc233;
+            background: #ffe8b3;
+        }
+
+        .home-content .box .cart.four {
+            color: #e05260;
+            background: #f7d4d7;
+        }
+
+        .home-content .total-order {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .home-content .sales-boxes {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .home-content .sales-boxes .recent-sales {
+            width: 100%;
+            background: #fff;
+            padding: 20px 30px;
+            margin: 0 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .home-content .sales-boxes .sales-details {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sales-boxes .box .title {
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .sales-boxes .sales-details li.topic {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .sales-boxes .sales-details li {
+            list-style: none;
+            margin: 8px 0;
+        }
+
+        .sales-boxes .sales-details li a {
+            font-size: 18px;
+            color: #333;
+            font-size: 400;
+            text-decoration: none;
+        }
+
+        .sales-boxes .box .button {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .sales-boxes .box .button a {
+            color: #fff;
+            background: #0A2558;
+            padding: 4px 12px;
+            font-size: 15px;
+            font-weight: 400;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .sales-boxes .box .button a:hover {
+            background: #0d3073;
+        }
+
+        @media (max-width: 1240px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar.active {
+                width: 240px;
+            }
+
+            .home-section {
+                width: calc(100% - 60px);
+                left: 60px;
+            }
+
+            .sidebar.active~.home-section {
+                width: calc(100% - 240px);
+                left: 240px;
+            }
+
+            .home-section nav {
+                width: calc(100% - 60px);
+                left: 60px;
+            }
+
+            .sidebar.active~.home-section nav {
+                width: calc(100% - 240px);
+                left: 240px;
+            }
+
+            canvas {
+                margin-left: 30px;
+                margin-right: 20px;
+            }
+        }
+
+        @media (max-width: 1150px) {
+            .home-content .sales-boxes {
+                flex-direction: column;
+            }
+
+            .home-content .sales-boxes .box {
+                width: 100%;
+                overflow-x: auto;
+                margin-bottom: 30px;
+            }
+
+            .overview-boxes .box {
+                width: calc(100% / 2 - 15px);
+            }
+
+            .wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .chart-container,
+            .login-container {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            canvas {
+                max-width: 100%;
+                height: auto;
+                margin: 20px 0;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .overview-boxes .box {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+
+            .kotak_boxes .kotak_surface,
+            .kotak_boxes .water_surface,
+            .kotak_boxes .buoy_surface {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+
+            .home-content .sales-boxes .sales-details {
+                width: 560px;
+                overflow-x: auto;
+            }
+
+            .home-section nav .sidebar-button .dashboard,
+            .home-section nav .profile-details .admin_name {
+                display: none;
+            }
+
+            canvas {
+                max-width: calc(100vw - 40px);
+                max-height: 250px;
+                margin: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .wrapper {
+                padding: 10px;
+                margin: 20px auto;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            canvas {
+                max-height: 300px;
+            }
+
+            .login-form input,
+            .login-form button {
+                font-size: 16px;
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wrapper {
+                margin: 10px auto;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            canvas {
+                max-height: 250px;
+            }
+
+            .login-form input,
+            .login-form button {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .logo-container img {
+                width: 50px;
+                height: 40px;
+            }
+        }
+
+        @media (max-width: 450px) {
+            nav .sidebar-button i {
+                font-size: 22px;
+            }
+
+            .home-section nav .search-box .bx-search {
+                height: 30px;
+                width: 30px;
+                right: 5px;
+                top: 50%;
+                transform: translateY(-50%);
+                border-radius: 4px;
+                line-height: 30px;
+                text-align: center;
+                color: #fff;
+                font-size: 20px;
+                transition: all 0.4 ease;
+            }
+
+            .home-section nav .search-box input {
+                font-size: 16px;
+                padding: 0 10px;
+            }
+
+            .home-section nav .profile-details {
+                height: 40px;
+                min-width: 100px;
+            }
+
+            nav .profile-details img {
+                height: 30px;
+                width: 30px;
+            }
+
+            nav .profile-details .admin_name {
+                font-size: 14px;
+            }
+
+            .home-content .sales-boxes .recent-sales {
+                margin: 0 auto;
+                max-width: 100%;
+                margin-bottom: 30px;
+            }
+
+            canvas {
+                max-width: calc(100vw - 20px);
+                max-height: 400px;
+                margin: 5px;
+            }
+
+            .wrapper {
+                margin: 20px auto;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .login-form input,
+            .login-form button {
+                font-size: 14px;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="logo-details">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Logo_Rasmi_UMT.png" alt="UMT Logo"
+                style="width: 60px; height: 50px; margin-right: 10px;">
+            <div class="logo_name-container">
+                <!---<span class="logo_name">UMT SPAK</span>-->
+                <span class="logo_subtitle">Sistem Penyelidikan Alami Kenyir</span>
+            </div>
+        </div>
+        <ul class="nav-links">
+            <li>
+                <a href="#" class="active">
+                    <i class='bx bx-grid-alt'></i>
+                    <span class="links_name">Dashboard</span>
+                </a>
+            </li>
+            <li class="log_out">
+                <a href="#">
+                    <i class='bx bx-log-out'></i>
+                    <span class="links_name">Log out</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <section class="home-section">
+        <nav>
+            <div class="sidebar-button">
+                <i class='bx bx-menu sidebarBtn'></i>
+                <span class="dashboard">Dashboard</span>
+            </div>
+            <div class="search-box">
+                <input type="text" placeholder="Search...">
+                <i class='bx bx-search'></i>
+            </div>
+            <div class="profile-details">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Logo_Rasmi_UMT.png" alt="UMT Logo"
+                    style="width: 30px; height: 20px; margin-right: 5px;">
+                <span class="admin_name">UMT SPAK</span>
+                <!--<i class='bx bx-chevron-down'></i>-->
+            </div>
+        </nav>
+
+        <div class="home-content">
+
+            <!-- BUOY THINGS
+            <div class="overview-boxes">
+                <div class="box">
+                    <div class="right-side">
+                        <div class="box-topic">Date/Time</div>
+                        <div class="number">123</div>
+                    </div>
+                </div>
+            </div>-->
+
+            <!-- BUOY PARAMETER -->
+            <div class="sales-boxes">
+                <div class="buoy-parameter box">
+                    <div class="kotak_boxes">
+                        <div class="buoy_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Date</div>
+                                <div class="number" id="date"></div>
+                                <div class="box-topic">Time</div>
+                                <div class="number" id="time"></div>
+                                <script>
+                                    function updateDateTime() {
+                                        var now = new Date();
+                                        var dateString = now.toLocaleDateString();
+                                        var timeString = now.toLocaleTimeString();
+                                        document.getElementById('date').innerHTML = dateString;
+                                        document.getElementById('time').innerHTML = timeString;
+                                    }
+
+                                    setInterval(updateDateTime, 1000);
+
+                                    updateDateTime();
+                                </script>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                        </div>
+                        <div class="buoy_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Buoy Position</div>
+
+                                <iframe
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127188.79080390513!2d102.56779447706981!3d4.997716525819003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31b62bfa9e9475cd%3A0x250d30b733b4ae9e!2sKenyir%20Lake!5e0!3m2!1sen!2smy!4v1722003123401!5m2!1sen!2smy"
+                                    width="100%" height="100" style="border:0; border-radius: 10px;" allowfullscreen=""
+                                    loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                <!--<div class="number">123</div>-->
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                        </div>
+                        <div class="buoy_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Buoy Voltage</div>
+                                <div class="number" id="buoy_voltage"></div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('buoy_voltage');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('buoy_voltage')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].buoy_voltage + ' V';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="buoy_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Stn Voltage</div>
+                                <div class="number" id="stn_voltage"></div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('stn_voltage');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('stn_voltage')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].stn_voltage + ' V';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SURFACE PARAMETER -->
+
+                <div class="recent-sales box">
+                    <div class="title">Surface Parameter</div>
+
+                    <div class="kotak_boxes">
+                        <div class="kotak_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Wind Speed</div>
+                                <div class="number" id="wind-speed">Gauge</div>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        uibuilder.start();
+
+                                        // Listen for messages from Node-RED
+                                        uibuilder.onChange('msg', function (msg) {
+                                            var windSpeedElement = document.getElementById('wind-speed');
+                                            if (msg.payload && msg.payload.windSpeed) {
+                                                windSpeedElement.textContent = msg.payload.windSpeed;
+                                            }
+                                        });
+                                    });
+                                </script>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                        </div>
+                        <div class="kotak_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Water Level</div>
+                                <div class="number" id="water_level"></div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('water_level');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('water_level')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].water_level + ' m';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="kotak_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Relative Humidity</div>
+                                <div class="number" id="relative_humidity"></div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('relative_humidity');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('relative_humidity')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].relative_humidity + ' %';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="kotak_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Wind Gust</div>
+                                <div class="number">Gauge</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                        </div>
+                        <div class="kotak_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Rainfall</div>
+                                <div class="number" id="rainfall"></div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('rainfall');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('rainfall')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].rainfall + '';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="kotak_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Barometric Pressure</div>
+                                <div class="number" id="barometric_pressure"></div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('barometric_pressure');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('barometric_pressure')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].barometric_pressure + ' mbar';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="kotak_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Wind Direction</div>
+                                <div class="number">Gauge</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                        </div>
+                        <div class="kotak_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Air Temperature</div>
+                                <div class="number" id="air_temperature">123</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('air_temperature');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('air_temperature')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].air_temperature + ' °C';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="kotak_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Solar Radiation</div>
+                                <div class="number" id="solar_parameter">123</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('solar_parameter');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('solar_parameter')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].solar_parameter + '';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WATER PARAMETER-->
+
+                <div class="recent-sales box">
+                    <div class="title">Water Parameter</div>
+
+                    <div class="kotak_boxes">
+                        <div class="water_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Water Temperature</div>
+                                <div class="number" id="water_temperature">123</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('water_temperature');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('water_temperature')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].water_temperature + ' °C';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="water_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Conductivity</div>
+                                <div class="number" id="conductivity">123</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('conductivity');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('conductivity')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].conductivity + ' S/m';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="water_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Dissolved Oxygen</div>
+                                <div class="number" id="dissolved_o2">123</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('dissolved_o2');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('dissolved_o2')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].dissolved_o2 + '';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="water_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Chlorophyll a</div>
+                                <div class="number" id="chlorophyll">123</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('chlorophyll');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('chlorophyll')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].chlorophyll + '';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="water_surface">
+                            <div class="right-side">
+                                <div class="box-topic">pH</div>
+                                <div class="number" id="ph_water">123</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('ph_water');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('ph_water')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].ph_water + '';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+
+                        </div>
+                        <div class="water_surface">
+                            <div class="right-side">
+                                <div class="box-topic">Turbidity</div>
+                                <div class="number" id="turbidity">123</div>
+                                <!--<div class="indicator"></div>-->
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        var buoyVoltageElement = document.getElementById('turbidity');
+
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('turbidity')) {
+                                            buoyVoltageElement.textContent = msg.payload[0].turbidity + '';
+                                        } else {
+                                            buoyVoltageElement.textContent = 'No data';
+                                        }
+                                    });
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wrapper">
+            <div class="chart-container">
+                <canvas id="randomLineChart" width="400" height="200"></canvas>
+            </div>
+            <div class="login-container">
+                <div class="container">
+                    <div class="logo-container">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Logo_Rasmi_UMT.png"
+                            alt="UMT Logo">
+                        <img src="https://www.svgrepo.com/show/301410/database-lock.svg" alt="Database Icon"
+                            class="logo">
+                    </div>
+                    <div class="login-form">
+                        <input type="text" id="username" placeholder="Username" />
+                        <input type="password" id="password" placeholder="Password" />
+                        <button id="loginBtn">Login</button>
+                    </div>
+                    <script>
+                        document.getElementById('loginBtn').addEventListener('click', function () {
+                            var username = document.getElementById('username').value;
+                            var password = document.getElementById('password').value;
+
+                            if (username === 'umt' && password === 'umt') {
+                                window.location.href = '/database';
+                            } else {
+                                alert('Invalid username or password');
+                            }
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function generateRandomData() {
+                let data = [];
+                for (let i = 0; i < 7; i++) {
+                    data.push(Math.floor(Math.random() * 100));
+                }
+                return data;
+            }
+
+            let ctx = document.getElementById('randomLineChart').getContext('2d');
+            let randomLineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+                    datasets: [{
+                        label: 'Water Level',
+                        data: generateRandomData(),
+                        borderColor: 'purple', // Change line color to purple
+                        backgroundColor: 'rgba(128, 0, 128, 0.1)', // Optional: fill under the line with a semi-transparent purple
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Water Level',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script>
+    </section>
+
+    <script>
+        let sidebar = document.querySelector(".sidebar");
+        let sidebarBtn = document.querySelector(".sidebarBtn");
+        sidebarBtn.onclick = function () {
+            sidebar.classList.toggle("active");
+            if (sidebar.classList.contains("active")) {
+                sidebarBtn.classList.replace("bx-menu", "bx-menu-alt-right");
+            } else
+                sidebarBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+        }
+    </script>
+
+</body>
+
+</html>

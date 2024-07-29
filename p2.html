@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>UIBuilder Example</title>
+    <script src="/uibuilder/vendor/socket.io/socket.io.js"></script>
+    <script src="/uibuilder/uibuilderfe.min.js"></script>
+</head>
+
+<body>
+    <div id="data-container"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            uibuilder.start();
+
+            uibuilder.onChange('msg', function (msg) {
+                var dataContainer = document.getElementById('data-container');
+                dataContainer.innerHTML = '';
+
+                var table = document.createElement('table');
+                var thead = document.createElement('thead');
+                var tbody = document.createElement('tbody');
+
+                var headers = Object.keys(msg.payload[0]);
+                var tr = document.createElement('tr');
+                headers.forEach(header => {
+                    var th = document.createElement('th');
+                    th.textContent = header;
+                    tr.appendChild(th);
+                });
+                thead.appendChild(tr);
+                table.appendChild(thead);
+
+                msg.payload.forEach(row => {
+                    var tr = document.createElement('tr');
+                    headers.forEach(header => {
+                        var td = document.createElement('td');
+                        td.textContent = row[header];
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(tbody);
+                dataContainer.appendChild(table);
+            });
+        });
+    </script>
+</body>
+
+</html>
+
+SELECTED DATA
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>UIBuilder Example</title>
+    <script src="/uibuilder/vendor/socket.io/socket.io.js"></script>
+    <script src="/uibuilder/uibuilderfe.min.js"></script>
+</head>
+
+<body>
+    <div id="data-container"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            uibuilder.start();
+
+            uibuilder.onChange('msg', function (msg) {
+                var dataContainer = document.getElementById('data-container');
+                dataContainer.innerHTML = '';
+
+                // Define the columns you want to display
+                var columnsToDisplay = ['datetime', 'wind_speed', 'water_level']; // Change these to your desired columns
+
+                // Create table element
+                var table = document.createElement('table');
+                var thead = document.createElement('thead');
+                var tbody = document.createElement('tbody');
+
+                // Add headers for selected columns
+                var tr = document.createElement('tr');
+                columnsToDisplay.forEach(column => {
+                    var th = document.createElement('th');
+                    th.textContent = column;
+                    tr.appendChild(th);
+                });
+                thead.appendChild(tr);
+                table.appendChild(thead);
+
+                // Add data rows for selected columns
+                msg.payload.forEach(row => {
+                    var tr = document.createElement('tr');
+                    columnsToDisplay.forEach(column => {
+                        var td = document.createElement('td');
+                        td.textContent = row[column] || ''; // Handle cases where column may not be present
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(tbody);
+                dataContainer.appendChild(table);
+            });
+        });
+    </script>
+</body>
+
+</html>

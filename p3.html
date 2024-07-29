@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Full Database Access</title>
+    <script src="/uibuilder/vendor/socket.io/socket.io.js"></script>
+    <script src="/uibuilder/uibuilderfe.min.js"></script>
+    <style>
+        /* Reset margins and paddings for body and other elements */
+        body,
+        table,
+        th,
+        td {
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        /* Ensure body fills the entire viewport and has no margin */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            overflow: hidden;
+            /* Prevent body scroll */
+        }
+
+        /* Container styling */
+        #data-container {
+            width: 100%;
+            height: calc(100vh - 40px);
+            /* Adjust height for margin and other elements */
+            margin: 20px;
+            overflow: auto;
+            /* Enable both vertical and horizontal scrolling */
+            box-sizing: border-box;
+            /* Include padding and border in element's total width and height */
+        }
+
+        /* Table styling */
+        table {
+            min-width: 1200px;
+            /* Set minimum width to accommodate more columns */
+            width: auto;
+            /* Allow table to grow as needed */
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Table header styling */
+        th {
+            background-color: #4f3680;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            white-space: nowrap;
+            /* Prevent wrapping */
+        }
+
+        /* Table cell styling */
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            white-space: nowrap;
+            /* Prevent wrapping */
+        }
+
+        /* Zebra striping for table rows */
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        /* Hover effect for rows */
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="data-container"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            uibuilder.start();
+
+            uibuilder.onChange('msg', function (msg) {
+                var dataContainer = document.getElementById('data-container');
+                dataContainer.innerHTML = '';
+
+                var table = document.createElement('table');
+                var thead = document.createElement('thead');
+                var tbody = document.createElement('tbody');
+
+                var headers = Object.keys(msg.payload[0]);
+                var tr = document.createElement('tr');
+                headers.forEach(header => {
+                    var th = document.createElement('th');
+                    th.textContent = header;
+                    tr.appendChild(th);
+                });
+                thead.appendChild(tr);
+                table.appendChild(thead);
+
+                msg.payload.forEach(row => {
+                    var tr = document.createElement('tr');
+                    headers.forEach(header => {
+                        var td = document.createElement('td');
+                        td.textContent = row[header];
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(tbody);
+                dataContainer.appendChild(table);
+            });
+        });
+    </script>
+</body>
+
+</html>

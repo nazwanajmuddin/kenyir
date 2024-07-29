@@ -1,0 +1,140 @@
+[
+    {
+        "id": "3b36f14625265c9b",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "8e2973cf08aaea93",
+        "type": "inject",
+        "z": "3b36f14625265c9b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 210,
+        "y": 260,
+        "wires": [
+            [
+                "ea971247db8e1c33"
+            ]
+        ]
+    },
+    {
+        "id": "ea971247db8e1c33",
+        "type": "function",
+        "z": "3b36f14625265c9b",
+        "name": "function 1",
+        "func": "msg.topic = \"SELECT * FROM wskenyir_table ORDER BY datetime ASC\";\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 260,
+        "wires": [
+            [
+                "70aaf37a8045c859"
+            ]
+        ]
+    },
+    {
+        "id": "70aaf37a8045c859",
+        "type": "mysql",
+        "z": "3b36f14625265c9b",
+        "mydb": "23c82f23d6a6aadc",
+        "name": "",
+        "x": 540,
+        "y": 260,
+        "wires": [
+            [
+                "585c5a22bd76e8e7",
+                "8639bb3ded1481d9"
+            ]
+        ]
+    },
+    {
+        "id": "585c5a22bd76e8e7",
+        "type": "uibuilder",
+        "z": "3b36f14625265c9b",
+        "name": "",
+        "topic": "msg",
+        "url": "dashboard",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "6.8.2",
+        "showMsgUib": false,
+        "title": "",
+        "descr": "",
+        "x": 710,
+        "y": 260,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "8639bb3ded1481d9",
+        "type": "uibuilder",
+        "z": "3b36f14625265c9b",
+        "name": "",
+        "topic": "msg",
+        "url": "database",
+        "okToGo": true,
+        "fwdInMessages": false,
+        "allowScripts": false,
+        "allowStyles": false,
+        "copyIndex": true,
+        "templateFolder": "blank",
+        "extTemplate": "",
+        "showfolder": false,
+        "reload": false,
+        "sourceFolder": "src",
+        "deployedVersion": "6.8.2",
+        "showMsgUib": false,
+        "title": "",
+        "descr": "",
+        "x": 710,
+        "y": 320,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "23c82f23d6a6aadc",
+        "type": "MySQLdatabase",
+        "name": "",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "wskenyir",
+        "tz": "",
+        "charset": "UTF8"
+    }
+]
