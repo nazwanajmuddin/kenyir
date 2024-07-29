@@ -10,6 +10,8 @@
     <script src="/uibuilder/vendor/socket.io/socket.io.js"></script>
     <script src="/uibuilder/uibuilderfe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/justgage/1.4.0/justgage.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
@@ -889,27 +891,39 @@
                         <div class="kotak_surface">
                             <div class="right-side">
                                 <div class="box-topic">Wind Speed</div>
-                                <div class="number" id="wind-speed">Gauge</div>
-                                <script>
-                                    document.addEventListener('DOMContentLoaded', function () {
-                                        uibuilder.start();
-
-                                        // Listen for messages from Node-RED
-                                        uibuilder.onChange('msg', function (msg) {
-                                            var windSpeedElement = document.getElementById('wind-speed');
-                                            if (msg.payload && msg.payload.windSpeed) {
-                                                windSpeedElement.textContent = msg.payload.windSpeed;
-                                            }
-                                        });
-                                    });
-                                </script>
-                                <!--<div class="indicator"></div>-->
+                                <div class="number" id="wind_speed_gauge"
+                                    style="width:150px; height:70px; margin-top: 5px;"></div>
                             </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    var windSpeedGauge = new JustGage({
+                                        id: "wind_speed_gauge",
+                                        value: 0,
+                                        min: 0,
+                                        max: 100,
+                                        title: "Wind Speed",
+                                        label: "m/s",
+                                        levelColors: ["#00ff00", "#ffbf00", "#ff0000"], // Green, Yellow, Red
+                                        levelColorsGradient: true,
+                                    });
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('wind_speed')) {
+                                            var windSpeed = msg.payload[0].wind_speed;
+                                            windSpeedGauge.refresh(windSpeed);
+                                        } else {
+                                            windSpeedGauge.refresh(0);
+                                        }
+                                    });
+                                });
+                            </script>
                         </div>
                         <div class="kotak_surface">
                             <div class="right-side">
                                 <div class="box-topic">Water Level</div>
-                                <div class="number" id="water_level"></div>
+                                <div class="number" id="water_level">123</div>
                                 <!--<div class="indicator"></div>-->
                             </div>
                             <script>
@@ -953,10 +967,36 @@
                         <div class="kotak_surface">
                             <div class="right-side">
                                 <div class="box-topic">Wind Gust</div>
-                                <div class="number">Gauge</div>
-                                <!--<div class="indicator"></div>-->
+                                <div class="number" id="wind_gust_gauge"
+                                    style="width:150px; height:70px; margin-top: 5px;"></div>
                             </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    var windSpeedGauge = new JustGage({
+                                        id: "wind_gust_gauge",
+                                        value: 0,
+                                        min: 0,
+                                        max: 100,
+                                        title: "Wind Gust",
+                                        label: "",
+                                        levelColors: ["#00ff00", "#ffbf00", "#ff0000"], // Green, Yellow, Red
+                                        levelColorsGradient: true,
+                                    });
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('wind_gust')) {
+                                            var windSpeed = msg.payload[0].wind_gust;
+                                            windSpeedGauge.refresh(windSpeed);
+                                        } else {
+                                            windSpeedGauge.refresh(0);
+                                        }
+                                    });
+                                });
+                            </script>
                         </div>
+
                         <div class="kotak_surface">
                             <div class="right-side">
                                 <div class="box-topic">Rainfall</div>
@@ -1004,9 +1044,34 @@
                         <div class="kotak_surface">
                             <div class="right-side">
                                 <div class="box-topic">Wind Direction</div>
-                                <div class="number">Gauge</div>
-                                <!--<div class="indicator"></div>-->
+                                <div class="number" id="wind_direction_gauge"
+                                    style="width:150px; height:70px; margin-top: 5px;"></div>
                             </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    uibuilder.start();
+
+                                    var windSpeedGauge = new JustGage({
+                                        id: "wind_direction_gauge",
+                                        value: 0,
+                                        min: 0,
+                                        max: 100,
+                                        title: "Wind Gust",
+                                        label: "",
+                                        levelColors: ["#00ff00", "#ffbf00", "#ff0000"], // Green, Yellow, Red
+                                        levelColorsGradient: true,
+                                    });
+
+                                    uibuilder.onChange('msg', function (msg) {
+                                        if (msg.payload && msg.payload.length > 0 && msg.payload[0].hasOwnProperty('wind_direction')) {
+                                            var windSpeed = msg.payload[0].wind_direction;
+                                            windSpeedGauge.refresh(windSpeed);
+                                        } else {
+                                            windSpeedGauge.refresh(0);
+                                        }
+                                    });
+                                });
+                            </script>
                         </div>
                         <div class="kotak_surface">
                             <div class="right-side">
@@ -1233,45 +1298,57 @@
         </div>
 
         <script>
-            function generateRandomData() {
-                let data = [];
-                for (let i = 0; i < 7; i++) {
-                    data.push(Math.floor(Math.random() * 100));
-                }
-                return data;
-            }
+            document.addEventListener('DOMContentLoaded', function () {
+                uibuilder.start();
 
-            let ctx = document.getElementById('randomLineChart').getContext('2d');
-            let randomLineChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
-                    datasets: [{
-                        label: 'Water Level',
-                        data: generateRandomData(),
-                        borderColor: 'purple', // Change line color to purple
-                        backgroundColor: 'rgba(128, 0, 128, 0.1)', // Optional: fill under the line with a semi-transparent purple
-                        fill: true,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Water Level',
-                            font: {
-                                size: 16,
-                                weight: 'bold'
+                function formatDate(dateString) {
+                    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+                    return new Date(dateString).toLocaleDateString('en-US', options);
+                }
+
+                function updateChart(data) {
+                    const ctx = document.getElementById('randomLineChart').getContext('2d');
+                    const labels = data.map(item => formatDate(item.datetime));
+                    const waterLevels = data.map(item => item.water_level);
+
+                    let randomLineChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Water Level',
+                                data: waterLevels,
+                                borderColor: 'purple',
+                                backgroundColor: 'rgba(128, 0, 128, 0.1)',
+                                fill: true,
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Water Level',
+                                    font: {
+                                        size: 16,
+                                        weight: 'bold'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
                             }
                         }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
+                    });
                 }
+
+                uibuilder.onChange('msg', function (msg) {
+                    if (msg.payload && Array.isArray(msg.payload)) {
+                        updateChart(msg.payload);
+                    }
+                });
             });
         </script>
     </section>
